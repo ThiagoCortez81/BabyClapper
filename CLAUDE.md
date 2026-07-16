@@ -8,7 +8,7 @@ BabyClapper is a tactile, sensory Flutter app that behaves like a digital rattle
 > left off.
 
 > **User-facing docs:** the feature wiki is published at
-> <https://github.com/thiagocortez81/BabyClapper/wiki> (source: the separate
+> <https://github.com/ThiagoCortez81/BabyClapper/wiki> (source: the separate
 > `BabyClapper.wiki.git` repo). It must be kept in sync with the app — see the
 > **Keep the wiki in sync** mandate in §6 Workflow.
 
@@ -164,4 +164,4 @@ Verification bar (the `.githooks/pre-commit` hook runs the first five automatica
 
   **DCM (unused-code/files) is a planned follow-up** — DCM's free tier currently requires a license key; it will be wired into CI after DCM relicenses to MIT on 2026-07-16. Do not wire it before that date.
 - **Surgical edits**: don't restructure unrelated code. One concern per change.
-- **Keep the wiki in sync**: any change that adds or alters how a feature is *used* — a new feature, a new/renamed setting, a changed gesture or haptic/sound pattern, a renamed UI label, changed defaults or limits — must be reflected in the GitHub wiki as part of the same work, not deferred. The wiki is the separate `BabyClapper.wiki.git` repo: clone `https://github.com/thiagocortez81/BabyClapper.wiki.git`, edit the relevant `*.md` page (one per feature; nav lives in `_Sidebar.md`, and add a page there if you create one), then commit + push (default branch `master`); it serves at <https://github.com/thiagocortez81/BabyClapper/wiki>. Keep wording accurate to the code (verbatim UI labels). Purely internal refactors with no behavior/usage change don't need a wiki edit. (One-time setup only: a brand-new wiki's `.wiki.git` 404s on clone/push until its first page is created in the web UI — no API exists for that; ours is already initialized.)
+- **Keep the wiki in sync**: any change that adds or alters how a feature is *used* — a new feature, a new/renamed setting, a changed gesture or haptic/sound pattern, a renamed UI label, changed defaults or limits — must be reflected in the GitHub wiki as part of the same work, not deferred. The wiki is the separate `BabyClapper.wiki.git` repo: clone `https://github.com/ThiagoCortez81/BabyClapper.wiki.git`, edit the relevant `*.md` page (one per feature; nav lives in `_Sidebar.md`, and add a page there if you create one), then commit + push (default branch `master`); it serves at <https://github.com/ThiagoCortez81/BabyClapper/wiki>. Keep wording accurate to the code (verbatim UI labels). Purely internal refactors with no behavior/usage change don't need a wiki edit. (One-time setup only: a brand-new wiki's `.wiki.git` 404s on clone/push until its first page is created in the web UI — no API exists for that; ours is already initialized.)
