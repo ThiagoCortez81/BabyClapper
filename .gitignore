@@ -7,6 +7,10 @@
 .buildlog/
 .history
 
+# BabyClapper is an app, not a package: pubspec.lock must be committed for
+# reproducible builds (the *.lock rule above would otherwise ignore it).
+!pubspec.lock
+
 
 
 # Flutter repo-specific
