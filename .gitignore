@@ -124,3 +124,6 @@ app.*.symbols
 
 # Claude Code — local (personal) settings; shared .claude/settings.json stays tracked
 .claude/settings.local.json
+# JetBrains IDE files (machine-specific paths + session state)
+.idea/
+*.iml
