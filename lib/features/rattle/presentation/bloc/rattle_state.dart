@@ -1,3 +1,5 @@
+// RattleState: the single Equatable state held by RattleBloc, currently
+// just a `ready` readiness flag.
 import 'package:equatable/equatable.dart';
 
 /// State for `RattleBloc`.

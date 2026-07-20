@@ -1,0 +1,219 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Read-only: this workflow runs PR code (including from forks), so it must not
+# hold a write token. The sticky comment is posted by the separate "CI Comment"
+# workflow (workflow_run), which runs trusted code from master.
+permissions:
+  contents: read
+
+# Cancel superseded runs: a new push to the same PR (or to master) aborts the
+# in-flight run for that ref — faster feedback, fewer wasted runner minutes.
+# Keyed by ref so different PRs never cancel each other.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.44.4'
+
+jobs:
+  checks:
+    name: Analyze, Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash # ensures pipefail so `cmd | tee` reflects cmd's exit code
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # Each check runs to completion (continue-on-error) so the summary
+      # comment can report every gate, not just the first failure. The final
+      # step fails the job if any gate did not pass.
+
+      - name: Analyze (very_good_analysis)
+        id: analyze
+        continue-on-error: true
+        run: flutter analyze 2>&1 | tee analyze.log
+
+      - name: custom_lint (architecture rules)
+        id: custom_lint
+        continue-on-error: true
+        run: dart run custom_lint 2>&1 | tee custom_lint.log
+
+      - name: custom_lint fixtures (baby_clapper_lints self-test)
+        id: lint_fixtures
+        continue-on-error: true
+        run: |
+          cd tools/baby_clapper_lints/example
+          dart pub get
+          dart run custom_lint 2>&1 | tee ../../../lint_fixtures.log
+
+      - name: bloc_lint
+        id: bloc_lint
+        continue-on-error: true
+        run: dart run bloc_tools:bloc lint lib < /dev/null 2>&1 | tee bloc_lint.log
+
+      - name: Format check
+        id: format
+        continue-on-error: true
+        run: dart format --output=none --set-exit-if-changed lib test tools 2>&1 | tee format.log
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: flutter test --coverage 2>&1 | tee test.log
+
+      # Build the comment body + record the PR number into an artifact. The
+      # comment itself is posted by the CI Comment workflow (it has the write
+      # token this job deliberately lacks).
+      - name: Build summary comment
+        if: github.event_name == 'pull_request'
+        env:
+          ANALYZE: ${{ steps.analyze.outcome }}
+          CUSTOM_LINT: ${{ steps.custom_lint.outcome }}
+          LINT_FIXTURES: ${{ steps.lint_fixtures.outcome }}
+          BLOC_LINT: ${{ steps.bloc_lint.outcome }}
+          FORMAT: ${{ steps.format.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          icon() { [ "$1" = success ] && printf '✅ Passed' || printf '❌ Failed'; }
+          all_pass=true
+          for o in "$ANALYZE" "$CUSTOM_LINT" "$LINT_FIXTURES" "$BLOC_LINT" "$FORMAT" "$TEST"; do
+            [ "$o" = success ] || all_pass=false
+          done
+
+          {
+            if $all_pass; then
+              echo "## 🟢 CI — all checks passed"
+            else
+              echo "## 🔴 CI — some checks failed"
+            fi
+            echo
+            echo "| Check | Result |"
+            echo "| :--- | :--- |"
+            echo "| \`flutter analyze\` | $(icon "$ANALYZE") |"
+            echo "| \`custom_lint\` | $(icon "$CUSTOM_LINT") |"
+            echo "| \`lint fixtures\` | $(icon "$LINT_FIXTURES") |"
+            echo "| \`bloc_lint\` | $(icon "$BLOC_LINT") |"
+            echo "| \`dart format\` | $(icon "$FORMAT") |"
+            echo "| \`flutter test\` | $(icon "$TEST") |"
+            echo
+          } > comment.md
+
+          # Coverage line — uses the same filter as `tool/coverage.sh` (excludes
+          # generated files and main.dart) so the number matches a local
+          # `bash tool/coverage.sh`.
+          # Reported only — not a gate (no arbitrary threshold to break CI).
+          if [ -f coverage/lcov.info ]; then
+            COV=$(awk -F: '
+              /^SF:/ {
+                f=$0; sub(/^SF:/,"",f);
+                skip = (f ~ /\.g\.dart$/) ||
+                       (f ~ /(^|\/)main\.dart$/)
+              }
+              /^LF:/ { if (!skip) tlf += substr($0,4) }
+              /^LH:/ { if (!skip) tlh += substr($0,4) }
+              END { if (tlf>0) printf "%.1f%%  (%d/%d lines)", 100*tlh/tlf, tlh, tlf; else printf "n/a" }
+            ' coverage/lcov.info)
+            echo "**Coverage (filtered):** ${COV}" >> comment.md
+            echo >> comment.md
+          fi
+
+          append_log() {
+            if [ "$2" != success ] && [ -f "$3" ]; then
+              {
+                echo "<details><summary>📄 <code>$1</code> output</summary>"
+                echo
+                echo '```'
+                tail -c 8000 "$3"
+                echo '```'
+                echo "</details>"
+                echo
+              } >> comment.md
+            fi
+          }
+          append_log "flutter analyze" "$ANALYZE" analyze.log
+          append_log "custom_lint" "$CUSTOM_LINT" custom_lint.log
+          append_log "lint fixtures" "$LINT_FIXTURES" lint_fixtures.log
+          append_log "bloc_lint" "$BLOC_LINT" bloc_lint.log
+          append_log "dart format" "$FORMAT" format.log
+          append_log "flutter test" "$TEST" test.log
+
+          echo "_Updated for \`${GITHUB_SHA::7}\` · [view run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})_" >> comment.md
+
+          printf '%s' "$PR_NUMBER" > number.txt
+
+      - name: Upload comment artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ci-comment
+          path: |
+            comment.md
+            number.txt
+          if-no-files-found: error
+
+      - name: Fail if any check failed
+        if: >-
+          steps.analyze.outcome != 'success' ||
+          steps.custom_lint.outcome != 'success' ||
+          steps.lint_fixtures.outcome != 'success' ||
+          steps.bloc_lint.outcome != 'success' ||
+          steps.format.outcome != 'success' ||
+          steps.test.outcome != 'success'
+        run: |
+          echo "One or more checks failed — see the job logs / PR comment above."
+          exit 1
+
+  # Secret scan: gitleaks fails the job if a credential/key/token is committed.
+  # Free for public repos (no license key required). Read-only token only — it
+  # writes a job-summary, not a PR comment, so fork PRs are safe.
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0 # gitleaks diffs the PR's commits — needs full history
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Fork-safe dependency-vuln gate: scan pubspec.lock and FAIL the job on a
+  # known vulnerability. We use the standalone scanner action (not the reusable
+  # workflow) on purpose: the reusable workflow statically declares
+  # `security-events: write` + `actions: read` at its top level, which can't be
+  # satisfied by a `contents: read` caller — that triggers a startup_failure on
+  # every run and would also break on fork PRs (where the token is downgraded
+  # to read-only). The standalone action only needs `contents: read`, uploads
+  # no SARIF, and osv-scanner exits non-zero on a vulnerability, so the job
+  # fails the build natively. Pinned to v2.3.8 (the docker image tag matches),
+  # so the action's "behavior may change in minor patches" caveat does not apply.
+  osv-scan:
+    name: OSV-Scanner (dependency vulnerabilities)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Scan pubspec.lock for known vulnerabilities
+        uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
+        with:
+          scan-args: |-
+            --lockfile=./pubspec.lock

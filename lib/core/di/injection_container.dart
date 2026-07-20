@@ -1,11 +1,20 @@
+// DI bootstrap (GetIt): constructs, initializes, and registers
+// HapticService, SoundService, MotionService, and the RattleBloc factory.
+// Invariant: each service's init() runs through _initSafely, its own
+// isolated try/catch, so one plugin failing on a platform-channel edge
+// case degrades only that one service and never aborts boot or blocks the
+// others from initializing (CLAUDE.md "graceful-degrade, never a crash").
+// Called once from main.dart at startup; per the avoid_get_it_in_widgets
+// architecture rule, `sl`/`GetIt` are referenced only from this file and
+// main.dart, never from widgets.
 import 'dart:developer';
 
-import 'package:baby_clapper/core/audio/sound_service.dart';
-import 'package:baby_clapper/core/audio/soundpool_sound_service.dart';
-import 'package:baby_clapper/core/haptics/haptic_service.dart';
-import 'package:baby_clapper/core/haptics/vibration_haptic_service.dart';
-import 'package:baby_clapper/core/motion/motion_service.dart';
-import 'package:baby_clapper/core/motion/sensors_motion_service.dart';
+import 'package:baby_clapper/features/rattle/data/sensors_motion_service.dart';
+import 'package:baby_clapper/features/rattle/data/soundpool_sound_service.dart';
+import 'package:baby_clapper/features/rattle/data/vibration_haptic_service.dart';
+import 'package:baby_clapper/features/rattle/domain/haptic_service.dart';
+import 'package:baby_clapper/features/rattle/domain/motion_service.dart';
+import 'package:baby_clapper/features/rattle/domain/sound_service.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_bloc.dart';
 import 'package:get_it/get_it.dart';
 

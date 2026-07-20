@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# BabyClapper pre-commit gate — formatting + the full static-analysis stack
+# must pass before a commit is allowed. This is the same bar CLAUDE.md §4/§6
+# requires before any feature is considered done.
+#
+# Enabled per clone with:  git config core.hooksPath .githooks
+# Emergency bypass (avoid):  git commit --no-verify
+#
+set -uo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 1
+
+# The project pins Flutter via .fvmrc — prefer fvm when present.
+if command -v fvm >/dev/null 2>&1; then
+  DART="fvm dart"
+  FLUTTER="fvm flutter"
+else
+  DART="dart"
+  FLUTTER="flutter"
+fi
+
+step() { printf '\033[1m▶ %s\033[0m\n' "$1"; }
+fail() {
+  printf '\033[31m✗ pre-commit failed: %s\033[0m\n' "$1" >&2
+  printf '  fix it, or bypass in an emergency with: git commit --no-verify\n' >&2
+  exit 1
+}
+
+step "dart format (check only)"
+$DART format --output=none --set-exit-if-changed lib test tools \
+  || fail "code is not formatted — run: $DART format lib test tools"
+
+step "flutter analyze (very_good_analysis)"
+$FLUTTER analyze || fail "analyzer reported issues"
+
+step "custom_lint (BabyClapper architecture rules)"
+$DART run custom_lint || fail "custom_lint reported issues"
+
+step "custom_lint fixtures (baby_clapper_lints self-test)"
+( cd tools/baby_clapper_lints/example && $DART run custom_lint ) \
+  || fail "baby_clapper_lints fixtures failed — a rule regressed"
+
+step "bloc lint"
+$DART run bloc_tools:bloc lint lib </dev/null || fail "bloc_lint reported issues"
+
+# Optional local secret scan — mirrors the gitleaks CI gate. Only runs if
+# gitleaks is installed (`brew install gitleaks`); CI scans regardless, so a
+# contributor without it isn't blocked, just unprotected locally.
+if command -v gitleaks >/dev/null 2>&1; then
+  step "gitleaks (staged secret scan)"
+  gitleaks protect --staged --redact --no-banner \
+    || fail "gitleaks flagged a potential secret in staged changes (or failed to run)"
+else
+  printf '\033[2m• gitleaks not installed — skipping local secret scan (CI still scans)\033[0m\n'
+fi
+
+printf '\033[32m✓ pre-commit checks passed\033[0m\n'

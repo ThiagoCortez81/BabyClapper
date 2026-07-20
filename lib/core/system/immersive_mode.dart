@@ -1,3 +1,8 @@
+// ImmersiveMode: core service wrapping SystemChrome (immersive-sticky
+// system UI) and wakelock_plus. Wired from main.dart at boot and
+// re-invoked by its WidgetsBindingObserver on AppLifecycleState.resumed;
+// releaseWakelock() must be called on pause/hidden so the screen isn't
+// held awake once the app leaves the foreground.
 import 'package:flutter/services.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 

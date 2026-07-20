@@ -1,3 +1,5 @@
+// HapticService: abstract vibration-feedback contract implemented by
+// VibrationHapticService.
 /// Vibration feedback. Implementations wrap the platform plugin and must
 /// no-op gracefully when the device has no vibrator.
 abstract interface class HapticService {

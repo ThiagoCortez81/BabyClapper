@@ -1,4 +1,4 @@
-import 'package:baby_clapper/core/rattle_math.dart';
+import 'package:baby_clapper/features/rattle/domain/rattle_math.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

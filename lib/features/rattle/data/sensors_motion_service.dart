@@ -1,9 +1,17 @@
+// SensorsMotionService: MotionService implementation backed by the
+// sensors_plus user-accelerometer stream. Collaborators: rattle_math's
+// isShakeMagnitude/isShakeDue for threshold + cooldown, dart:developer for
+// error logging. Wired as an app-lifetime singleton in
+// core/di/injection_container.dart. Uses the *user* accelerometer (gravity
+// already removed) so the raw magnitude compares directly against the
+// shake threshold, and cooldown-gates repeated samples of one physical
+// shake into a single `shakes` event.
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:baby_clapper/core/motion/motion_service.dart';
-import 'package:baby_clapper/core/rattle_math.dart';
+import 'package:baby_clapper/features/rattle/domain/motion_service.dart';
+import 'package:baby_clapper/features/rattle/domain/rattle_math.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 /// [MotionService] backed by the `sensors_plus` user-accelerometer stream.

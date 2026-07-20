@@ -1,10 +1,20 @@
+// RattleBloc: coordinates haptic, sound, and motion feedback for the
+// rattle screen. Collaborators: HapticService, SoundService, MotionService
+// (abstract types only, injected via core/di/injection_container.dart).
+// Invariant: the shake subscription is wired synchronously inside the
+// constructor body, NOT inside the async _onInitialized handler — add()
+// defers event processing to a microtask, so waiting for
+// RattleInitialized to be handled would let a shake fired immediately
+// after construction race past an unattached listener. Each feedback
+// channel (_guard) fails and logs independently, so haptics and sound
+// degrade without ever blocking each other.
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:baby_clapper/core/audio/sound_service.dart';
-import 'package:baby_clapper/core/haptics/haptic_service.dart';
-import 'package:baby_clapper/core/motion/motion_service.dart';
-import 'package:baby_clapper/core/rattle_math.dart';
+import 'package:baby_clapper/features/rattle/domain/haptic_service.dart';
+import 'package:baby_clapper/features/rattle/domain/motion_service.dart';
+import 'package:baby_clapper/features/rattle/domain/rattle_math.dart';
+import 'package:baby_clapper/features/rattle/domain/sound_service.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_event.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_state.dart';
 import 'package:bloc/bloc.dart';

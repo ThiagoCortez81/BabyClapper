@@ -1,3 +1,12 @@
+// App entry point and boot sequence: enables immersive fullscreen mode
+// (ImmersiveMode), runs the DI bootstrap (core/di/injection_container.dart),
+// and mounts the root MaterialApp with RattleScreen wrapped in a
+// BlocProvider<RattleBloc>. Also defines `_ImmersiveObserver`, the
+// WidgetsBindingObserver that re-asserts immersive mode + wakelock on
+// AppLifecycleState.resumed and releases the wakelock once the app leaves
+// the foreground (paused/hidden) — `inactive` is a brief, still-visible
+// transition (app switcher, incoming call) so the wakelock is deliberately
+// left alone there.
 import 'dart:async';
 
 import 'package:baby_clapper/core/di/injection_container.dart' as di;
