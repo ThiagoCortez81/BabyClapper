@@ -13,4 +13,9 @@ class ImmersiveMode {
   Future<void> reassert() async {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
+
+  /// Releases the wakelock (call when the app leaves the foreground).
+  Future<void> releaseWakelock() async {
+    await WakelockPlus.disable();
+  }
 }
