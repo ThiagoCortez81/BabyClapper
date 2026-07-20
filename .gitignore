@@ -9,7 +9,11 @@
 
 # BabyClapper is an app, not a package: pubspec.lock must be committed for
 # reproducible builds (the *.lock rule above would otherwise ignore it).
-!pubspec.lock
+# Anchored to the root so this does NOT also un-ignore pubspec.lock files
+# belonging to path-dependency packages under tools/ (e.g. baby_clapper_lints
+# and its example fixture package), which are libraries and, per convention,
+# do not commit their lockfiles.
+!/pubspec.lock
 
 
 

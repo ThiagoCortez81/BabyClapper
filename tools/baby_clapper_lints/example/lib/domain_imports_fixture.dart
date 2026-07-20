@@ -1,0 +1,6 @@
+// Fixture: a non-domain/ file is exempt from domain_no_infrastructure_imports.
+// ignore_for_file: uri_does_not_exist, unused_import
+
+// This file's path does NOT contain /domain/, so these must NOT be flagged:
+import 'package:flutter/material.dart';
+import 'package:baby_clapper/features/rattle/data/haptic_service_impl.dart';
