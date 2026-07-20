@@ -5,7 +5,7 @@ import 'package:soundpool/soundpool.dart';
 
 /// [SoundService] backed by the `soundpool` + `audio_session` plugins.
 ///
-/// Configures a music-style playback session and preloads both rattle
+/// Configures an ambient/mixing playback session and preloads both rattle
 /// samples once in [init]. Every playback call no-ops gracefully when the
 /// pool or a sample failed to load, so a missing capability is never a
 /// crash.
@@ -14,11 +14,32 @@ class SoundpoolSoundService implements SoundService {
   int? _beadId;
   int? _rattleId;
 
+  // Owner decision: the rattle must go SILENT when the phone's silent
+  // switch is on, and must MIX with other audio (music/podcasts keep
+  // playing) rather than interrupting it. Haptics still work regardless of
+  // this session's state — the two channels degrade independently.
+  //
+  // iOS: `ambient` is the category that respects the silent switch (unlike
+  // `playback`, which ignores it) and mixes with other audio by default;
+  // `mixWithOthers` makes that explicit. Android has no true silent-switch
+  // equivalent, so `sonification` + `assistanceSonification` describes this
+  // as a short UI sound effect, and `gainTransientMayDuck` requests focus
+  // that permits ducking/mixing instead of pausing other apps' audio.
+  static const _sessionConfig = AudioSessionConfiguration(
+    avAudioSessionCategory: AVAudioSessionCategory.ambient,
+    avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
+    androidAudioAttributes: AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.sonification,
+      usage: AndroidAudioUsage.assistanceSonification,
+    ),
+    androidAudioFocusGainType: AndroidAudioFocusGainType.gainTransientMayDuck,
+  );
+
   @override
   Future<void> init() async {
     try {
       final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration.music());
+      await session.configure(_sessionConfig);
       // Intentionally broad: a failed session configuration must not stop
       // sample loading below, so playback can still degrade gracefully.
       // ignore: avoid_catches_without_on_clauses
@@ -55,12 +76,13 @@ class SoundpoolSoundService implements SoundService {
     final pool = _pool;
     final id = _beadId;
     if (pool == null || id == null) return;
-    final streamId = await pool.play(id, rate: rate.clamp(0.5, 2.0));
-    if (streamId == 0) return;
-    await pool.setVolume(
-      streamId: streamId,
-      volume: volume.clamp(0.0, 1.0),
-    );
+    // `bead.wav` is an ~80ms exponentially-decaying click whose entire
+    // perceptual content is the first ~15ms, so volume must be set on the
+    // SOUND before `play()` — setting it on the resulting stream afterwards
+    // lands after the attack and makes the volume half of speed-scaling
+    // inert.
+    await pool.setVolume(soundId: id, volume: volume.clamp(0.0, 1.0));
+    await pool.play(id, rate: rate.clamp(0.5, 2.0));
   }
 
   @override
