@@ -31,9 +31,12 @@ instead of computing velocity against a stale, possibly far-away position.
 ### Why the shake subscription is constructor-wired
 
 ```dart
-RattleBloc({required haptic, required sound, required motion})
-    : _haptic = haptic, _sound = sound, _motion = motion,
-      super(const RattleState()) {
+RattleBloc({
+  required HapticService haptic,
+  required SoundService sound,
+  required MotionService motion,
+}) : _haptic = haptic, _sound = sound, _motion = motion,
+     super(const RattleState()) {
   _shakeSub = _motion.shakes.listen((_) => add(const RattleShaken()));
   on<RattleInitialized>(_onInitialized);
   on<SwipeTick>(_onSwipeTick);

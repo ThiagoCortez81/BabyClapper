@@ -61,7 +61,6 @@ own `//` header for detail.
 | App entry / boot sequence | `lib/main.dart`, `lib/core/di/injection_container.dart` |
 | Audio session (silent switch respected, mixes with other audio) | `lib/features/rattle/data/soundpool_sound_service.dart` |
 | Bead sound (pitch/volume curve + playback) | `lib/features/rattle/domain/rattle_math.dart` (`beadPlayback`), `lib/features/rattle/data/soundpool_sound_service.dart` (`playBead`) |
-| Boot sequence | `lib/main.dart`, `lib/core/di/injection_container.dart` |
 | Burst (multi-pulse shake vibration pattern) | `lib/features/rattle/data/vibration_haptic_service.dart` (`burst`), `lib/features/rattle/presentation/bloc/rattle_bloc.dart` (`_onShaken`) |
 | Degradation / graceful no-op on missing capability | `lib/features/rattle/presentation/bloc/rattle_bloc.dart` (`_guard`), `lib/core/di/injection_container.dart` (`_initSafely`) |
 | Dependency injection (GetIt / `sl`) | `lib/core/di/injection_container.dart` |
