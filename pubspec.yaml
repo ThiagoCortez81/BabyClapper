@@ -44,9 +44,15 @@ dependencies:
   wakelock_plus: ^1.6.1
 
 dev_dependencies:
+  baby_clapper_lints:
+    path: tools/baby_clapper_lints
+  bloc_lint: ^0.3.7
   bloc_test: ^10.0.0
+  bloc_tools: ^0.1.0-dev.22
+  custom_lint: ^0.8.1
   flutter_test:
     sdk: flutter
+  solid_lints: ^0.3.3
   very_good_analysis: ^10.3.0
 
 flutter:

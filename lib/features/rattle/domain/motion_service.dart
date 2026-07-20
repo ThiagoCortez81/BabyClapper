@@ -1,3 +1,5 @@
+// MotionService: abstract device-motion/shake-detection contract
+// implemented by SensorsMotionService.
 /// Device-motion source. Emits on [shakes] each time a shake is detected.
 abstract interface class MotionService {
   /// Emits an event each time a shake gesture is detected.

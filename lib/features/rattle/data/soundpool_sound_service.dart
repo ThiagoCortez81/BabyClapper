@@ -1,3 +1,12 @@
+// SoundpoolSoundService: SoundService implementation backed by the
+// soundpool + audio_session plugins. Configures an ambient/mixing
+// playback session (respects the iOS silent switch, never requests
+// Android audio focus) and preloads the bead + rattle samples once in
+// init(). Wired as an app-lifetime singleton in
+// core/di/injection_container.dart. Invariant: playBead must call
+// pool.setVolume() BEFORE pool.play() — bead.wav's entire perceptual
+// content is its first ~15ms attack, so setting volume on the resulting
+// stream afterwards lands too late and makes volume-scaling inert.
 import 'package:audio_session/audio_session.dart';
 import 'package:baby_clapper/features/rattle/domain/sound_service.dart';
 import 'package:flutter/services.dart' show rootBundle;

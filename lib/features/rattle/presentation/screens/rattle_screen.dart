@@ -1,3 +1,10 @@
+// RattleScreen: the fullscreen edge-to-edge gesture surface. Tracks each
+// pointer independently (keyed by PointerEvent.pointer) so multiple
+// simultaneous fingers don't conflate one finger's move with another's
+// last-known position. Invariant: pointer-move samples are throttled to
+// kSwipeThrottle (~40ms) per pointer before a SwipeTick is dispatched to
+// RattleBloc, so a fast continuous swipe doesn't queue events faster than
+// a realistic feedback cadence.
 import 'package:baby_clapper/features/rattle/domain/rattle_math.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_bloc.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_event.dart';

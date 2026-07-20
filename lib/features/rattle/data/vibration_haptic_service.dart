@@ -1,3 +1,8 @@
+// VibrationHapticService: HapticService implementation backed by the
+// vibration plugin. Checks hasVibrator()/hasAmplitudeControl() once in
+// init() and no-ops gracefully when the device has no vibrator or lacks
+// amplitude control (falls back to a fixed-duration buzz). Wired as an
+// app-lifetime singleton in core/di/injection_container.dart.
 import 'package:baby_clapper/features/rattle/domain/haptic_service.dart';
 import 'package:vibration/vibration.dart';
 

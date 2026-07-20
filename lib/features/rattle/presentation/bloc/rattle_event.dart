@@ -1,3 +1,6 @@
+// RattleEvent: sealed event hierarchy consumed by RattleBloc —
+// RattleInitialized, SwipeTick (throttled swipe velocity), and
+// RattleShaken.
 import 'package:equatable/equatable.dart';
 
 /// Base type for all events handled by `RattleBloc`.

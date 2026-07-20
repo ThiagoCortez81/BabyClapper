@@ -1,3 +1,12 @@
+// DI bootstrap (GetIt): constructs, initializes, and registers
+// HapticService, SoundService, MotionService, and the RattleBloc factory.
+// Invariant: each service's init() runs through _initSafely, its own
+// isolated try/catch, so one plugin failing on a platform-channel edge
+// case degrades only that one service and never aborts boot or blocks the
+// others from initializing (CLAUDE.md "graceful-degrade, never a crash").
+// Called once from main.dart at startup; per the avoid_get_it_in_widgets
+// architecture rule, `sl`/`GetIt` are referenced only from this file and
+// main.dart, never from widgets.
 import 'dart:developer';
 
 import 'package:baby_clapper/features/rattle/data/sensors_motion_service.dart';

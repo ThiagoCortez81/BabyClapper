@@ -1,3 +1,13 @@
+// RattleBloc: coordinates haptic, sound, and motion feedback for the
+// rattle screen. Collaborators: HapticService, SoundService, MotionService
+// (abstract types only, injected via core/di/injection_container.dart).
+// Invariant: the shake subscription is wired synchronously inside the
+// constructor body, NOT inside the async _onInitialized handler — add()
+// defers event processing to a microtask, so waiting for
+// RattleInitialized to be handled would let a shake fired immediately
+// after construction race past an unattached listener. Each feedback
+// channel (_guard) fails and logs independently, so haptics and sound
+// degrade without ever blocking each other.
 import 'dart:async';
 import 'dart:developer';
 

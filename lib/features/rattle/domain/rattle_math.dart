@@ -1,5 +1,6 @@
-/// Pure feedback math for the rattle. No Flutter, no plugins — fully testable.
-library;
+// Pure feedback math for the rattle: swipe-velocity and shake-magnitude
+// calculations shared by RattleBloc and its data-layer services. No
+// Flutter, no plugins — fully testable in isolation.
 
 /// Playback parameters for a bead sound: pitch rate and volume.
 typedef BeadPlayback = ({double rate, double volume});

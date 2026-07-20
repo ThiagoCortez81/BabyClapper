@@ -1,3 +1,5 @@
+// SoundService: abstract rattle sound-playback contract implemented by
+// SoundpoolSoundService.
 /// Rattle sound playback. Implementations wrap the audio plugin and must
 /// no-op gracefully when audio is unavailable.
 abstract interface class SoundService {
