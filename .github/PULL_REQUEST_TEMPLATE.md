@@ -1,6 +1,6 @@
 <!--
   Thanks for contributing to BabyClapper! Keep this PR focused on one concern
-  (CLAUDE.md §6 "surgical edits"). Delete sections that don't apply.
+  (CLAUDE.md Mandatory rules → "Surgical edits"). Delete sections that don't apply.
 -->
 
 ## What & why
@@ -16,7 +16,7 @@ Closes #
 - [ ] Refactor (no behaviour change)
 - [ ] Docs / chore
 
-## Verification (CLAUDE.md §4 done-bar)
+## Verification (CLAUDE.md "Build & verification bar")
 
 CI enforces all of these, but confirm you ran them locally:
 
