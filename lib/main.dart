@@ -26,7 +26,7 @@ Future<void> main() async {
 /// (backgrounded, or occluded in a multi-window/split-screen scenario), so
 /// both release the wakelock per the "foregrounded only" spec. `enable()`
 /// re-hides the system bars *and* re-enables the wakelock in one call, so
-/// resume doesn't need a separate `reassert()` step.
+/// resume calls it directly rather than a bars-only step.
 class _ImmersiveObserver with WidgetsBindingObserver {
   _ImmersiveObserver(this._immersive);
   final ImmersiveMode _immersive;
