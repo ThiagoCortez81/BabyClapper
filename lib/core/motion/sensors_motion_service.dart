@@ -55,6 +55,9 @@ class SensorsMotionService implements MotionService {
   @override
   Future<void> dispose() async {
     await _accelSub?.cancel();
+    // Clear the handle so the init() reentrancy guard doesn't mistake a
+    // disposed service for an already-running one.
+    _accelSub = null;
     await _shakes.close();
   }
 }

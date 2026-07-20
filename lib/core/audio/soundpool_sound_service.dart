@@ -21,10 +21,15 @@ class SoundpoolSoundService implements SoundService {
   //
   // iOS: `ambient` is the category that respects the silent switch (unlike
   // `playback`, which ignores it) and mixes with other audio by default;
-  // `mixWithOthers` makes that explicit. Android has no true silent-switch
-  // equivalent, so `sonification` + `assistanceSonification` describes this
-  // as a short UI sound effect, and `gainTransientMayDuck` requests focus
-  // that permits ducking/mixing instead of pausing other apps' audio.
+  // `mixWithOthers` makes that explicit.
+  //
+  // Android has no true silent-switch equivalent. The android* fields below
+  // are declarative only: audio_session applies them via setActive(true),
+  // which this app never calls, so no audio focus is ever requested — which
+  // is precisely the behaviour we want (never requesting focus is why other
+  // apps' audio is never paused). Actual SoundPool playback attributes come
+  // from soundpool's own pool creation, not from this config. Keep these
+  // fields as intent documentation; do not rely on them taking effect.
   static const _sessionConfig = AudioSessionConfiguration(
     avAudioSessionCategory: AVAudioSessionCategory.ambient,
     avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
