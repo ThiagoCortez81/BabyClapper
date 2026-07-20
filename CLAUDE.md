@@ -106,6 +106,14 @@ Mandatory rules:
 
 ## 4. Build & Test Commands
 
+> **⚠️ Current state (as of the rattle vertical slice):** only `fvm flutter analyze`,
+> `fvm dart format`, and `fvm flutter test` are runnable today. The `custom_lint` /
+> `baby_clapper_lints` fixtures / `bloc_lint` / `tool/coverage.sh` / `.githooks` /
+> CI entries below describe the **intended** tooling — that infrastructure has not
+> been scaffolded yet (deliberately deferred; see the vertical-slice spec). Don't be
+> surprised when those commands fail with "package not found"; wire them up in the
+> lint-infra pass, then delete this note.
+
 ```
 fvm flutter analyze                                           # very_good_analysis — must be 0 issues
 fvm dart run custom_lint                                      # BabyClapper architecture rules (tools/baby_clapper_lints) + solid_lints metrics
@@ -127,7 +135,7 @@ Verification bar (the `.githooks/pre-commit` hook runs the first five automatica
 
 > Project-specific gotchas will accumulate here as BabyClapper is built. The conventions below already bind.
 
-- **Debug logs**: `print` is disallowed (`avoid_print`). **BLoCs use `dart:developer`'s `log(msg, name: '<BlocName>')`** — never `debugPrint` (importing `package:flutter/foundation.dart` into a bloc trips bloc_lint's `avoid_flutter_imports`; blocs stay Flutter-decoupled). Non-bloc layers (use cases, services, widgets) use `debugPrint`.
+- **Debug logs**: `print` is disallowed (`avoid_print`). **BLoCs use `dart:developer`'s `log(msg, name: '<BlocName>')`** — never `debugPrint` (importing `package:flutter/foundation.dart` into a bloc trips bloc_lint's `avoid_flutter_imports`; blocs stay Flutter-decoupled). Non-bloc layers (use cases, services, widgets) use `debugPrint` for plain traces, but **should prefer `dart:developer`'s `log(..., error:, stackTrace:)` when reporting a caught failure** — `debugPrint` takes only a `String`, so using it there would throw away the error object and stack trace. Degrade paths in the core services and DI bootstrap follow this.
 - **Imports are `package:baby_clapper/...` everywhere** (enforced by `always_use_package_imports` + `directives_ordering`). No relative imports.
 - **Every platform plugin is wrapped behind a core service.** `vibration` / `soundpool` / `sensors_plus` / `wakelock_plus` are imported only inside their `core/` service (`HapticService` / `SoundService` / `MotionService` / the immersive-mode helper). Widgets and blocs call the service, never the plugin — this keeps the app testable with fakes and the degrade path in one place.
 - **Haptics and audio degrade independently.** Check capability first (`hasVibrator()`, audio focus) and no-op gracefully; a missing capability is never a crash, and one channel failing must not block the other.
