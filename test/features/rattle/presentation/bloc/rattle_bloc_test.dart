@@ -10,24 +10,35 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class FakeHaptic implements HapticService {
+  FakeHaptic({this.throwOnTick = false});
+  final bool throwOnTick;
   final List<double> ticks = [];
   int bursts = 0;
   @override
   Future<void> init() async {}
   @override
-  Future<void> tick(double intensity) async => ticks.add(intensity);
+  Future<void> tick(double intensity) async {
+    if (throwOnTick) throw StateError('haptic unavailable');
+    ticks.add(intensity);
+  }
+
   @override
   Future<void> burst() async => bursts++;
 }
 
 class FakeSound implements SoundService {
+  FakeSound({this.throwOnPlayBead = false});
+  final bool throwOnPlayBead;
   final List<BeadCall> beads = [];
   int rattles = 0;
   @override
   Future<void> init() async {}
   @override
-  Future<void> playBead({required double rate, required double volume}) async =>
-      beads.add(BeadCall(rate, volume));
+  Future<void> playBead({required double rate, required double volume}) async {
+    if (throwOnPlayBead) throw StateError('sound unavailable');
+    beads.add(BeadCall(rate, volume));
+  }
+
   @override
   Future<void> playRattle() async => rattles++;
   @override
@@ -86,7 +97,7 @@ void main() {
   );
 
   blocTest<RattleBloc, RattleState>(
-    'RattleInitialized marks ready and wires the shake stream',
+    'RattleInitialized marks the bloc ready',
     build: build,
     act: (bloc) {
       bloc.add(const RattleInitialized());
@@ -95,5 +106,50 @@ void main() {
     wait: const Duration(milliseconds: 50),
     expect: () => [const RattleState(ready: true)],
     verify: (_) => expect(haptic.bursts, 1),
+  );
+
+  test(
+    'the shake subscription is wired at construction time, before any '
+    'event is added',
+    () async {
+      final bloc = build();
+      addTearDown(bloc.close);
+
+      // No `add()` call at all — the shake subscription must already be
+      // live from the constructor for this to fire.
+      motion.emitShake();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(haptic.bursts, 1);
+      expect(sound.rattles, 1);
+    },
+  );
+
+  blocTest<RattleBloc, RattleState>(
+    'a throwing haptic channel does not block the sound channel',
+    build: () => RattleBloc(
+      haptic: FakeHaptic(throwOnTick: true),
+      sound: sound,
+      motion: motion,
+    ),
+    act: (bloc) => bloc.add(const SwipeTick(4)),
+    verify: (_) {
+      expect(sound.beads, hasLength(1));
+    },
+    errors: () => <Object>[],
+  );
+
+  blocTest<RattleBloc, RattleState>(
+    'a throwing sound channel does not block the haptic channel',
+    build: () => RattleBloc(
+      haptic: haptic,
+      sound: FakeSound(throwOnPlayBead: true),
+      motion: motion,
+    ),
+    act: (bloc) => bloc.add(const SwipeTick(4)),
+    verify: (_) {
+      expect(haptic.ticks, hasLength(1));
+    },
+    errors: () => <Object>[],
   );
 }

@@ -8,7 +8,9 @@ sealed class RattleEvent extends Equatable {
   List<Object?> get props => const [];
 }
 
-/// Fired once at startup: wires the shake subscription.
+/// Fired once at startup to mark the bloc as ready. The shake subscription
+/// is wired at construction time (see `RattleBloc`'s constructor), not by
+/// this event.
 class RattleInitialized extends RattleEvent {
   /// Creates a [RattleInitialized] event.
   const RattleInitialized();
