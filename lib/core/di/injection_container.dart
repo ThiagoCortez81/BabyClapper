@@ -27,6 +27,11 @@ Future<void> init() async {
   await _initSafely('SoundService', sound.init);
   await _initSafely('MotionService', motion.init);
 
+  // SoundService and MotionService are intentionally never disposed here:
+  // both are registered as app-lifetime singletons that live for the
+  // process's whole life, so their `dispose()` (pool teardown / stream
+  // subscription cancellation) is unused in practice and only exists for
+  // symmetry / unit-test cleanup.
   sl
     ..registerSingleton<HapticService>(haptic)
     ..registerSingleton<SoundService>(sound)
