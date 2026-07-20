@@ -42,4 +42,23 @@ void main() {
       expect(isShakeMagnitude(5), isFalse);
     });
   });
+
+  group('isShakeDue', () {
+    final last = DateTime(2026, 1, 1, 12);
+
+    test('is not due strictly inside the cooldown window', () {
+      final now = last.add(const Duration(milliseconds: 299));
+      expect(isShakeDue(last, now), isFalse);
+    });
+
+    test('is due once the cooldown window has fully elapsed', () {
+      final now = last.add(const Duration(milliseconds: 301));
+      expect(isShakeDue(last, now), isTrue);
+    });
+
+    test('is due exactly at the cooldown boundary', () {
+      final now = last.add(kShakeCooldown);
+      expect(isShakeDue(last, now), isTrue);
+    });
+  });
 }

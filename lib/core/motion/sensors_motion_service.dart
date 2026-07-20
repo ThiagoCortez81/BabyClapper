@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:baby_clapper/core/motion/motion_service.dart';
@@ -9,22 +10,34 @@ import 'package:sensors_plus/sensors_plus.dart';
 ///
 /// Uses the *user* accelerometer (gravity already removed) so the raw
 /// magnitude can be compared directly against [isShakeMagnitude]'s
-/// threshold. A 300ms cooldown prevents a single physical shake — which
-/// spans several sensor samples above the threshold — from firing more
-/// than one [shakes] event.
+/// threshold. [isShakeDue] enforces a cooldown so a single physical shake —
+/// which spans several sensor samples above the threshold — fires only one
+/// [shakes] event.
 class SensorsMotionService implements MotionService {
   final StreamController<void> _shakes = StreamController<void>.broadcast();
   StreamSubscription<UserAccelerometerEvent>? _accelSub;
   DateTime _lastShake = DateTime.fromMillisecondsSinceEpoch(0);
-
-  static const _cooldown = Duration(milliseconds: 300);
 
   @override
   Stream<void> get shakes => _shakes.stream;
 
   @override
   Future<void> init() async {
-    _accelSub = userAccelerometerEventStream().listen(_onAccel);
+    // Guard against reentrancy: a second init() call would otherwise leak
+    // the first subscription instead of replacing it.
+    if (_accelSub != null) return;
+    _accelSub = userAccelerometerEventStream().listen(
+      _onAccel,
+      onError: (Object error, StackTrace stackTrace) {
+        developer.log(
+          'accelerometer stream error',
+          name: 'MotionService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      },
+      cancelOnError: false,
+    );
   }
 
   void _onAccel(UserAccelerometerEvent event) {
@@ -34,7 +47,7 @@ class SensorsMotionService implements MotionService {
     if (!isShakeMagnitude(magnitude)) return;
 
     final now = DateTime.now();
-    if (now.difference(_lastShake) < _cooldown) return;
+    if (!isShakeDue(_lastShake, now)) return;
     _lastShake = now;
     _shakes.add(null);
   }
