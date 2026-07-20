@@ -73,4 +73,44 @@ void main() {
 
     expect(haptic.ticks, greaterThan(0));
   });
+
+  testWidgets(
+    'moves faster than the 40ms throttle are suppressed',
+    (tester) async {
+      final haptic = _NoopHaptic();
+      final bloc = RattleBloc(
+        haptic: haptic,
+        sound: _NoopSound(),
+        motion: _NoopMotion(),
+      );
+      addTearDown(bloc.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<RattleBloc>.value(
+            value: bloc,
+            child: const RattleScreen(),
+          ),
+        ),
+      );
+
+      // The very first move only seeds the per-pointer track (no prior
+      // sample to diff against), and a suppressed move does NOT advance
+      // that track's timestamp — so as long as every subsequent move stays
+      // within 40ms of the seed, all of them stay suppressed. Deleting the
+      // `if (dt < kSwipeThrottle) return;` guard would let every one of
+      // these through instead.
+      final gesture = await tester.startGesture(const Offset(50, 300));
+      var elapsed = Duration.zero;
+      for (var i = 0; i < 4; i++) {
+        elapsed += const Duration(milliseconds: 8);
+        await gesture.moveBy(const Offset(40, 0), timeStamp: elapsed);
+        await tester.pump(const Duration(milliseconds: 8));
+      }
+      await gesture.up(timeStamp: elapsed);
+      await tester.pump();
+
+      expect(haptic.ticks, 0);
+    },
+  );
 }
