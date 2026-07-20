@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:baby_clapper/core/motion/motion_service.dart';
-import 'package:baby_clapper/core/rattle_math.dart';
+import 'package:baby_clapper/features/rattle/domain/motion_service.dart';
+import 'package:baby_clapper/features/rattle/domain/rattle_math.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 /// [MotionService] backed by the `sensors_plus` user-accelerometer stream.

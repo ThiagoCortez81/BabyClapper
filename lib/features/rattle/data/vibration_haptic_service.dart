@@ -1,4 +1,4 @@
-import 'package:baby_clapper/core/haptics/haptic_service.dart';
+import 'package:baby_clapper/features/rattle/domain/haptic_service.dart';
 import 'package:vibration/vibration.dart';
 
 /// [HapticService] backed by the `vibration` plugin.

@@ -1,5 +1,5 @@
 import 'package:audio_session/audio_session.dart';
-import 'package:baby_clapper/core/audio/sound_service.dart';
+import 'package:baby_clapper/features/rattle/domain/sound_service.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:soundpool/soundpool.dart';
 

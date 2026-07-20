@@ -1,4 +1,4 @@
-import 'package:baby_clapper/core/rattle_math.dart';
+import 'package:baby_clapper/features/rattle/domain/rattle_math.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_bloc.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_event.dart';
 import 'package:flutter/material.dart';

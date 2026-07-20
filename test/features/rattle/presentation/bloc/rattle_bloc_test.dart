@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:baby_clapper/core/audio/sound_service.dart';
-import 'package:baby_clapper/core/haptics/haptic_service.dart';
-import 'package:baby_clapper/core/motion/motion_service.dart';
+import 'package:baby_clapper/features/rattle/domain/haptic_service.dart';
+import 'package:baby_clapper/features/rattle/domain/motion_service.dart';
+import 'package:baby_clapper/features/rattle/domain/sound_service.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_bloc.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_event.dart';
 import 'package:baby_clapper/features/rattle/presentation/bloc/rattle_state.dart';
