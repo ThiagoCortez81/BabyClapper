@@ -106,6 +106,14 @@ Mandatory rules:
 
 ## 4. Build & Test Commands
 
+> **⚠️ Current state (as of the rattle vertical slice):** only `fvm flutter analyze`,
+> `fvm dart format`, and `fvm flutter test` are runnable today. The `custom_lint` /
+> `baby_clapper_lints` fixtures / `bloc_lint` / `tool/coverage.sh` / `.githooks` /
+> CI entries below describe the **intended** tooling — that infrastructure has not
+> been scaffolded yet (deliberately deferred; see the vertical-slice spec). Don't be
+> surprised when those commands fail with "package not found"; wire them up in the
+> lint-infra pass, then delete this note.
+
 ```
 fvm flutter analyze                                           # very_good_analysis — must be 0 issues
 fvm dart run custom_lint                                      # BabyClapper architecture rules (tools/baby_clapper_lints) + solid_lints metrics
@@ -127,7 +135,7 @@ Verification bar (the `.githooks/pre-commit` hook runs the first five automatica
 
 > Project-specific gotchas will accumulate here as BabyClapper is built. The conventions below already bind.
 
-- **Debug logs**: `print` is disallowed (`avoid_print`). **BLoCs use `dart:developer`'s `log(msg, name: '<BlocName>')`** — never `debugPrint` (importing `package:flutter/foundation.dart` into a bloc trips bloc_lint's `avoid_flutter_imports`; blocs stay Flutter-decoupled). Non-bloc layers (use cases, services, widgets) use `debugPrint`.
+- **Debug logs**: `print` is disallowed (`avoid_print`). **BLoCs use `dart:developer`'s `log(msg, name: '<BlocName>')`** — never `debugPrint` (importing `package:flutter/foundation.dart` into a bloc trips bloc_lint's `avoid_flutter_imports`; blocs stay Flutter-decoupled). Non-bloc layers (use cases, services, widgets) use `debugPrint` for plain traces, but **should prefer `dart:developer`'s `log(..., error:, stackTrace:)` when reporting a caught failure** — `debugPrint` takes only a `String`, so using it there would throw away the error object and stack trace. Degrade paths in the core services and DI bootstrap follow this.
 - **Imports are `package:baby_clapper/...` everywhere** (enforced by `always_use_package_imports` + `directives_ordering`). No relative imports.
 - **Every platform plugin is wrapped behind a core service.** `vibration` / `soundpool` / `sensors_plus` / `wakelock_plus` are imported only inside their `core/` service (`HapticService` / `SoundService` / `MotionService` / the immersive-mode helper). Widgets and blocs call the service, never the plugin — this keeps the app testable with fakes and the degrade path in one place.
 - **Haptics and audio degrade independently.** Check capability first (`hasVibrator()`, audio focus) and no-op gracefully; a missing capability is never a crash, and one channel failing must not block the other.
@@ -151,7 +159,9 @@ Verification bar (the `.githooks/pre-commit` hook runs the first five automatica
 - **Verify before claiming done**: a feature is NOT done until the full static-analysis stack is clean **and** tests are green. Run, and confirm zero issues from, **all** of: `fvm flutter analyze` (very_good_analysis), `fvm dart run custom_lint` (BabyClapper architecture rules), and `fvm dart run bloc_tools:bloc lint lib` (bloc_lint), and the baby_clapper_lints fixtures self-test (`cd tools/baby_clapper_lints/example && fvm dart run custom_lint`) — plus `fvm dart format` cleanliness and `fvm flutter test`. These are separate passes; never assume a clean `flutter analyze` covers custom_lint or bloc_lint. The `.githooks/pre-commit` hook enforces the analysis + format gate on every commit (`git config core.hooksPath .githooks` to enable per clone; bypass only via `--no-verify`).
 - **New custom_lint rules go in `tools/baby_clapper_lints/`**: it is its own package (`custom_lint_builder` plugin) excluded from the app analyzer. Every new rule **must ship a `// expect_lint:` fixture** in `tools/baby_clapper_lints/example/lib/` — the fixtures self-test is part of the pre-commit hook and CI gate so rule regressions are caught immediately. Run `( cd tools/baby_clapper_lints/example && fvm dart run custom_lint )` to verify fixtures locally. Suppress a justified exception with a per-line `// ignore: <rule>` + a one-line reason (note: `equatable_props_complete` is anchored to the class name, so the `// ignore:` must be directly above the class declaration, not above a field).
 
-  The full set of rules shipped in `tools/baby_clapper_lints/`:
+  The full set of rules **planned** for `tools/baby_clapper_lints/` (not yet
+  scaffolded — see the ⚠️ current-state note in §4; the gates listed in this
+  section become binding once that package exists):
   - `avoid_get_it_in_widgets` — no `sl`/`GetIt` outside `lib/core/di/` + `main.dart`.
   - `avoid_hardcoded_brand_colors` — no `Colors.black/white/red` outside `lib/core/theme/`.
   - `domain_no_infrastructure_imports` — files under `*/domain/` must not import `package:flutter/`, `dart:ui`, `dart:io`, `package:vibration/`, `package:soundpool/`, `package:sensors_plus/`, or any sibling `data/` path. Keeps the domain layer pure Dart.
