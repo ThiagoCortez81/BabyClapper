@@ -41,7 +41,7 @@ dependencies:
   sensors_plus: ^7.1.0
   soundpool: ^2.4.1
   vibration: ^3.2.0
-  wakelock_plus: ^1.6.1
+  wakelock_plus: ^1.7.0
 
 dev_dependencies:
   baby_clapper_lints:
